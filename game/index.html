@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:,">
+<title>Vice Harbor — an open-world harbour crime game</title>
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #1a0f24; font-family: "Segoe UI", Arial, sans-serif; color: #fff; }
+  #game-holder { position: fixed; inset: 0; }
+  #game-holder canvas { display: block; }
+
+  .hidden { display: none !important; }
+
+  /* ---------- HUD ---------- */
+  #hud { position: fixed; inset: 0; pointer-events: none; z-index: 5; }
+  #top-right { position: absolute; top: 14px; right: 16px; text-align: right; }
+  #money { font-size: 30px; font-weight: 800; color: #7dff8a; text-shadow: 0 2px 0 #0a3d18, 0 0 14px rgba(60,255,120,.45); letter-spacing: 1px; }
+  #stars { font-size: 26px; letter-spacing: 4px; color: #3a3f4a; text-shadow: 0 1px 2px #000; line-height: 1; }
+  #stars .lit { color: #ffd23e; text-shadow: 0 0 10px rgba(255,200,40,.9), 0 1px 2px #000; }
+  #clock { font-size: 13px; color: #ffd9ec; opacity: .85; margin-top: 2px; }
+
+  #objective-box { position: absolute; top: 14px; left: 50%; transform: translateX(-50%); max-width: 560px; text-align: center;
+    background: linear-gradient(180deg, rgba(20,8,32,.78), rgba(20,8,32,.55)); border: 1px solid rgba(255,93,162,.55);
+    border-radius: 10px; padding: 8px 18px 9px; box-shadow: 0 4px 24px rgba(0,0,0,.45); }
+  #objective-title { font-size: 12px; letter-spacing: 3px; color: #ff8fc0; text-transform: uppercase; }
+  #objective { font-size: 17px; font-weight: 600; color: #fff; margin-top: 1px; }
+  #timer { font-size: 15px; font-weight: 800; color: #ffd23e; }
+  #timer.low { color: #ff4757; animation: blink .5s steps(2) infinite; }
+  @keyframes blink { 50% { opacity: .35; } }
+
+  #bottom-left { position: absolute; left: 16px; bottom: 16px; width: 230px; }
+  #health-label { font-size: 11px; letter-spacing: 2px; color: #ffb3c9; text-transform: uppercase; margin-bottom: 3px; }
+  #health-wrap { height: 14px; background: rgba(10,4,18,.7); border: 1px solid rgba(255,255,255,.35); border-radius: 7px; overflow: hidden; }
+  #health-fill { height: 100%; width: 100%; background: linear-gradient(90deg, #ff2e63, #ff7b54); transition: width .18s; }
+  #armor-line { font-size: 12px; color: #aee9ff; margin-top: 4px; min-height: 14px; }
+
+  #bottom-right { position: absolute; right: 16px; bottom: 16px; text-align: center; }
+  #minimap { width: 184px; height: 184px; border-radius: 50%; border: 3px solid rgba(255,255,255,.75);
+    box-shadow: 0 6px 24px rgba(0,0,0,.55), 0 0 0 4px rgba(20,8,32,.55); background: #17301f; }
+  #speed { font-size: 24px; font-weight: 800; color: #fff; text-shadow: 0 2px 6px #000; margin-top: 4px; min-height: 28px; }
+  #speed small { font-size: 12px; color: #ffd9ec; }
+
+  #hint { position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%); font-size: 12.5px; color: rgba(255,255,255,.85);
+    background: rgba(15,5,25,.55); padding: 5px 14px; border-radius: 20px; white-space: nowrap; }
+  #interact { position: absolute; left: 50%; bottom: 64px; transform: translateX(-50%); font-size: 16px; font-weight: 700; color: #0b2a1e;
+    background: linear-gradient(180deg, #8affc1, #3ddc84); padding: 7px 18px; border-radius: 8px; box-shadow: 0 4px 16px rgba(0,0,0,.5); }
+  #interact b { background: #0b2a1e; color: #8affc1; border-radius: 4px; padding: 0 7px; margin-right: 6px; }
+
+  #crosshair { position: absolute; left: 50%; top: 50%; width: 18px; height: 18px; transform: translate(-50%, -50%); opacity: .9; }
+  #crosshair::before, #crosshair::after { content: ""; position: absolute; background: #fff; box-shadow: 0 0 4px #000; }
+  #crosshair::before { left: 8px; top: 0; width: 2px; height: 18px; }
+  #crosshair::after { left: 0; top: 8px; width: 18px; height: 2px; }
+
+  #banner { position: absolute; left: 50%; top: 30%; transform: translateX(-50%) scale(1); text-align: center; opacity: 0; transition: opacity .25s, transform .25s; }
+  #banner.show { opacity: 1; transform: translateX(-50%) scale(1.06); }
+  #banner .big { font-size: 52px; font-weight: 900; letter-spacing: 4px; color: #ffd23e;
+    text-shadow: 0 0 22px rgba(255,180,0,.75), 0 4px 0 #7a2c00, 0 6px 18px rgba(0,0,0,.6); text-transform: uppercase; }
+  #banner .sub { font-size: 19px; color: #d8ffe2; text-shadow: 0 2px 8px #000; margin-top: 2px; }
+
+  #toast { position: absolute; left: 50%; top: 110px; transform: translateX(-50%); font-size: 15px; font-weight: 600; color: #ffe9a8;
+    background: rgba(15,5,25,.72); border: 1px solid rgba(255,210,62,.5); padding: 6px 16px; border-radius: 8px; opacity: 0; transition: opacity .3s; max-width: 70%; text-align: center; }
+  #toast.show { opacity: 1; }
+
+  #vignette { position: fixed; inset: 0; pointer-events: none; z-index: 6; opacity: 0;
+    background: radial-gradient(ellipse at center, transparent 52%, rgba(200,0,30,.55) 100%); transition: opacity .15s; }
+
+  /* ---------- Screens ---------- */
+  .screen { position: fixed; inset: 0; z-index: 10; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+  #title-screen { background: linear-gradient(180deg, rgba(24,6,36,.18) 0%, rgba(24,6,36,.05) 40%, rgba(16,4,26,.72) 100%); }
+  #game-title { font-size: 92px; font-weight: 900; letter-spacing: 3px; line-height: .95; margin: 0;
+    background: linear-gradient(180deg, #aef7ff 8%, #37e0ff 34%, #ff5da2 62%, #ffb35c 100%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    filter: drop-shadow(0 4px 0 rgba(60,0,60,.85)) drop-shadow(0 10px 26px rgba(0,0,0,.55)); text-transform: uppercase; }
+  #tagline { font-size: 20px; color: #ffe3f1; letter-spacing: 4px; text-transform: uppercase; margin: 10px 0 4px; text-shadow: 0 2px 10px #000; }
+  #story-line { font-size: 14.5px; color: #cfe9ff; opacity: .92; margin-bottom: 26px; text-shadow: 0 1px 6px #000; }
+  .menu-btn { pointer-events: auto; cursor: pointer; width: 280px; margin: 6px; padding: 13px 0; font-size: 19px; font-weight: 800; letter-spacing: 2px;
+    color: #fff; text-transform: uppercase; border-radius: 10px; border: 2px solid rgba(255,255,255,.65);
+    background: linear-gradient(180deg, rgba(255,93,162,.88), rgba(178,32,110,.88)); box-shadow: 0 6px 20px rgba(0,0,0,.5); transition: transform .08s, filter .12s; }
+  .menu-btn:hover { filter: brightness(1.18); transform: scale(1.04); }
+  .menu-btn.secondary { background: linear-gradient(180deg, rgba(20,120,140,.88), rgba(10,70,95,.88)); }
+  .menu-btn:disabled { filter: grayscale(.8) brightness(.6); cursor: default; transform: none; }
+  #how-panel { margin-top: 16px; max-width: 620px; background: rgba(12,4,22,.85); border: 1px solid rgba(120,230,255,.4); border-radius: 12px;
+    padding: 14px 22px; font-size: 14px; line-height: 1.65; color: #e8f6ff; text-align: left; }
+  #how-panel b { color: #ffd23e; }
+  #save-note { margin-top: 12px; font-size: 12.5px; color: rgba(255,255,255,.75); }
+
+  #pause-screen, #end-screen { background: rgba(10,3,18,.66); backdrop-filter: blur(2px); }
+  .panel-title { font-size: 54px; font-weight: 900; letter-spacing: 4px; text-transform: uppercase; margin: 0 0 6px;
+    color: #ffd23e; text-shadow: 0 0 20px rgba(255,170,0,.6), 0 4px 0 #5c2400, 0 6px 16px rgba(0,0,0,.7); }
+  #end-screen .panel-title.bad { color: #ff4757; text-shadow: 0 0 20px rgba(255,40,60,.65), 0 4px 0 #4d0010, 0 6px 16px rgba(0,0,0,.7); }
+  #end-stats { font-size: 17px; line-height: 1.7; color: #eaf6ff; margin-bottom: 20px; text-shadow: 0 1px 6px #000; }
+  #end-stats b { color: #7dff8a; }
+</style>
+</head>
+<body>
+<div id="game-holder"></div>
+
+<div id="hud" class="hidden">
+  <div id="top-right">
+    <div id="money">$250</div>
+    <div id="stars"></div>
+    <div id="clock">GOLDEN HOUR · VICE HARBOR PD</div>
+  </div>
+  <div id="objective-box">
+    <div id="objective-title">Free Roam</div>
+    <div id="objective">Explore Vice Harbor</div>
+    <div id="timer" class="hidden">0:00</div>
+  </div>
+  <div id="toast"></div>
+  <div id="banner"><div class="big">Mission Passed</div><div class="sub"></div></div>
+  <div id="crosshair" class="hidden"></div>
+  <div id="interact" class="hidden"><b>E</b><span>Enter vehicle</span></div>
+  <div id="bottom-left">
+    <div id="health-label">Health</div>
+    <div id="health-wrap"><div id="health-fill"></div></div>
+    <div id="armor-line"></div>
+  </div>
+  <div id="bottom-right">
+    <canvas id="minimap" width="184" height="184"></canvas>
+    <div id="speed"></div>
+  </div>
+  <div id="hint">WASD move · Mouse/QE camera · SHIFT sprint · E enter car · CLICK shoot · ESC pause</div>
+</div>
+<div id="vignette"></div>
+
+<div id="title-screen" class="screen">
+  <h1 id="game-title">Vice<br>Harbor</h1>
+  <div id="tagline">Sunset never pays its debts</div>
+  <div id="story-line">Marina Vale runs the harbour. Do her jobs, earn her trust — and try not to meet the VHPD.</div>
+  <button class="menu-btn" id="btn-play">Play</button>
+  <button class="menu-btn secondary" id="btn-continue">Continue</button>
+  <button class="menu-btn secondary" id="btn-how">How to Play</button>
+  <div id="how-panel" class="hidden">
+    <b>On foot:</b> WASD move · mouse or Q/E orbit camera · SHIFT sprint · E enter the nearest car · mouse click fires your pistol (aim with the camera).<br>
+    <b>Driving:</b> W/S accelerate &amp; brake/reverse · A/D steer · SPACE handbrake · E get out.<br>
+    <b>The law:</b> theft, hits and gunfire raise your wanted stars. VHPD cruisers hunt you — break line of sight to cool the heat. Get pinned and you are <b>busted</b>; lose all health and you are <b>wasted</b>. Both cost cash.<br>
+    <b>Missions:</b> follow the yellow marker. Finish Marina's three jobs for big payouts, then the harbour is yours.
+  </div>
+  <div id="save-note">Progress (cash, position, missions) saves automatically to this browser.</div>
+</div>
+
+<div id="pause-screen" class="screen hidden">
+  <h2 class="panel-title">Paused</h2>
+  <div id="end-stats">Vice Harbor waits for no one. Well — just this once.</div>
+  <button class="menu-btn" id="btn-resume">Resume</button>
+  <button class="menu-btn secondary" id="btn-quit-title">Back to Title</button>
+</div>
+
+<div id="end-screen" class="screen hidden">
+  <h2 class="panel-title bad" id="end-title">Busted</h2>
+  <div id="end-stats"></div>
+  <button class="menu-btn" id="btn-respawn">Respawn</button>
+</div>
+
+<script src="./vendor/three.min.js"></script>
+<script type="module" src="./src/main.js"></script>
+</body>
+</html>
