@@ -1,50 +1,39 @@
-// Vice Harbor — an original open-world crime game for make.fun gta6-01.
-// Built by Mica for Tzy: a golden-hour harbour city you explore on foot and
-// by car, with traffic, pedestrians, a five-star wanted system, police
-// pursuits, pistol combat and three scripted missions, all rendered in
-// three.js from procedural geometry with no network assets at all.
-// This entrypoint (Node 22, standard library only) hands the game in: it
-// copies game/ and screenshots/ from beside this file to /output and writes
-// /output/dossier.json, the summary the judge reads, with the vendored
-// make.fun library (vendor/makefun-game.ts, kept byte-identical to the kit).
+// Vice Harbor — hand-in program for the gta6-01 bounty (Node 22, standard library
+// only). The playable game lives in game/ as plain static files: index.html, a handful
+// of classic scripts under game/src/, and three.js vendored at game/vendor/. Nothing
+// is built or fetched; this program simply copies game/ and screenshots/ into the
+// output directory and asks the vendored make.fun library to summarise them into
+// dossier.json, exactly as the scorer will.
 //
-// Serve it locally with `node serve.ts`, then open http://localhost:8080.
-// Outside the grader's container, MAKEFUN_OUTPUT_DIR stands in for /output:
+// Run it the way the grader does, or locally with an output override:
 //   mkdir -p out && MAKEFUN_OUTPUT_DIR=out node main.ts
-//
-// Vice Harbor build config: the caps below mirror the gta6-01 gate exactly
-// (4 screenshots max, 256 KiB each; game/ at most 993 entries and 48 MiB).
+// Play the game itself with:  node serve.ts   ->  http://localhost:8080
 
 import { cpSync, existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { buildDossier } from './vendor/makefun-game.ts';
 
-const here = fileURLToPath(new URL('.', import.meta.url));
-const out = process.env.MAKEFUN_OUTPUT_DIR ?? '/output';
+const entryDir = fileURLToPath(new URL('.', import.meta.url));
+const outputDir = process.env.MAKEFUN_OUTPUT_DIR ?? '/output';
 
-mkdirSync(out, { recursive: true });
-cpSync(join(here, 'game'), join(out, 'game'), { recursive: true });
-mkdirSync(join(out, 'screenshots'), { recursive: true });
-if (existsSync(join(here, 'screenshots'))) cpSync(join(here, 'screenshots'), join(out, 'screenshots'), { recursive: true });
+// Fresh output tree: the game folder wholesale, then the screenshots beside it.
+mkdirSync(outputDir, { recursive: true });
+cpSync(join(entryDir, 'game'), join(outputDir, 'game'), { recursive: true });
+mkdirSync(join(outputDir, 'screenshots'), { recursive: true });
+const shotsDir = join(entryDir, 'screenshots');
+if (existsSync(shotsDir)) {
+  cpSync(shotsDir, join(outputDir, 'screenshots'), { recursive: true });
+}
 
-// The scorer's own caps (reference/gate.json): only text_max_bytes shapes the bytes; the others refuse an entry the
-// scorer would refuse (more than 4 screenshots or one over 256 KiB; more than 993 files in game/ or 48 MiB of game
-// files, in all, or a path under game/ over 1000 bytes: game/ counts beside /output's own 1000-entry cap, its
-// screenshots/ and dossier.json).
-writeFileSync(
-  join(out, 'dossier.json'),
-  buildDossier(out, {
-    text_max_bytes: 163840,
-    screenshots: { max: 4, max_bytes: 262144 },
-    game_max_files: 993,
-    game_max_bytes: 50331648,
-    game_path_max_bytes: 1000,
-  }),
-);
-
-// Vice Harbor sign-off: the dossier above is the whole entry — the game in
-// game/ (index.html, src/{main,city,entities,missions,audio}.js and the
-// vendored three.min.js) plus the four judged screenshots in screenshots/.
-// If this line prints, the handover completed exactly as the gate expects.
-console.log('Vice Harbor handed in: game/ + screenshots/ copied, dossier.json written to ' + out);
+// The caps below mirror the scorer's gate, so an entry the scorer would refuse
+// (too many or too-large screenshots, an oversized game tree, an over-long path)
+// fails here first, on my machine, instead of after submission.
+const dossier = buildDossier(outputDir, {
+  text_max_bytes: 163840,
+  screenshots: { max: 4, max_bytes: 262144 },
+  game_max_files: 993,
+  game_max_bytes: 50331648,
+  game_path_max_bytes: 1000,
+});
+writeFileSync(join(outputDir, 'dossier.json'), dossier);
