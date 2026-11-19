@@ -4,37 +4,41 @@
 
 # Vice Harbor
 
-An original open-world crime game set in a golden-hour coastal city, built with three.js.
-Cruise palm boulevards, steal cars, dodge the Harbor Patrol, and run a three-mission story
-chain from the pier to the Skyline Garage hideout.
+An original open-world crime game set in a golden-hour coastal city, built
+with a hand-rolled canvas 3D engine and zero dependencies. Roam the harbour
+district on foot, steal and drive cars, dodge or fight the heat, and work a
+three-mission story chain for the Marisol crew.
 
 ## Run it
 
+Open `game/index.html` in a browser, or serve the folder:
+
 ```
-node serve.ts          # or: node main.ts with MAKEFUN_OUTPUT_DIR set for the dossier build
+node serve.ts
 ```
 
-Then open http://localhost:8080 — the game is fully offline, no network requests.
+Deterministic screenshot scenes: append `?shot=start|play|chase|mission&seed=1`
+to the URL. Each scene sets `window.__shotReady = true` once it has rendered.
 
 ## Controls
 
-- **WASD** — move / drive
-- **Mouse** (click canvas to lock) / **Q / E** — camera
-- **Shift** — sprint
-- **E** — enter / exit car (context: the interact key is **F** when a car is near; see HUD hint)
-- **Click** — shoot pistol (on foot, pointer locked)
-- **Space** — handbrake
-- **Esc / P** — pause
+- WASD — move / drive
+- Mouse or Q / E — swing the camera
+- Shift — sprint
+- E (near a car) — enter / exit (also F)
+- Click — fire the pistol
+- Space — handbrake
+- Esc / P — pause
 
 ## Features
 
-- Procedural golden-hour city: lit-window towers, invented neon signs, palm boulevards,
-  ocean, boardwalk and a fishing pier
-- On-foot and driving play with traffic AI, pedestrians and parked cars to steal
-- Wanted-star system with Harbor Patrol pursuit, bust meter and escape decay
-- Hitscan pistol combat, cash briefcase pickups, vehicle damage and player health
-- Three-mission story chain: timed pier delivery, a two-star escape, and a five-gate
-  checkpoint run — with HUD, canvas minimap, title / pause / end screens
-- localStorage save (career cash, missions completed, best Gate Rush time)
-- WebAudio-synthesized engine, siren, gunshot and pickup sounds — no audio files
-- Deterministic screenshot scenes via `?shot=start|play|chase|mission&seed=1`
+- Procedural seeded city: towers with lit windows, palm boulevards, invented
+  neon signs, ocean, boardwalk and a pier, plus a hideout garage
+- Traffic AI and wandering pedestrians
+- Wanted-star system with police pursuit that scales with your heat
+- Hitscan pistol combat
+- Three-mission story chain: timed delivery, a two-star escape, and a
+  five-gate checkpoint run
+- HUD with cash, health and wanted stars, plus a live canvas minimap
+- Title, pause and end screens; progress saved to localStorage
+- WebAudio-synthesised engine, shots, sirens and pickup chimes — no audio files

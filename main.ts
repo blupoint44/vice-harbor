@@ -1,41 +1,83 @@
-// A working gta6-01 entry (Node 22, standard library only): the game is this directory's
-// game/ folder, plain static files a desktop browser loads offline (game/index.html and its ES
-// modules, no library and no network request), and the program hands it in. It copies game/ and
-// screenshots/ from beside this file to /output and writes /output/dossier.json, the summary the
-// judge reads, with the vendored make.fun library. Only the plumbing, not an open world: Block
-// Dodger, a plain 2D canvas game where a paddle dodges falling blocks and catches coins, with a
-// title screen, score, lives and levels, game over and restart, flat colours and no sound. Build
-// your own open-world crime game in its place (three.js or any library you vendor under game/),
-// put your 3 or 4 PNG or JPEG screenshots in screenshots/ (the first by name is the cover) and run it.
+// Vice Harbor packaging step.
 //
-// Serve it locally with `node serve.ts`, then open http://localhost:8080.
-// Outside the grader's container, MAKEFUN_OUTPUT_DIR stands in for /output:
-//   mkdir -p out && MAKEFUN_OUTPUT_DIR=out node main.ts
+// Running this file assembles the submission bundle: the playable game and
+// its four screenshots are mirrored into the output folder, and a dossier
+// describing the game tree is written next to them for the platform to read.
 
-import { cpSync, existsSync, mkdirSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
+import {
+  existsSync,
+  mkdirSync,
+  readdirSync,
+  readFileSync,
+  statSync,
+  writeFileSync,
+} from 'node:fs';
+import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { buildDossier } from './vendor/makefun-game.ts';
+import * as kit from './vendor/makefun-game.ts';
 
-const here = fileURLToPath(new URL('.', import.meta.url));
-const out = process.env.MAKEFUN_OUTPUT_DIR ?? '/output';
+const here = dirname(fileURLToPath(import.meta.url));
 
-mkdirSync(out, { recursive: true });
-cpSync(join(here, 'game'), join(out, 'game'), { recursive: true });
-mkdirSync(join(out, 'screenshots'), { recursive: true });
-if (existsSync(join(here, 'screenshots'))) cpSync(join(here, 'screenshots'), join(out, 'screenshots'), { recursive: true });
+// Walk a folder tree and reproduce it somewhere else, file by file. Written
+// out by hand (instead of one library copy call) so the bundle step has no
+// surprises about which entries travel and which stay behind.
+function mirrorTree(fromDir: string, toDir: string): number {
+  let carried = 0;
+  mkdirSync(toDir, { recursive: true });
+  const entries = readdirSync(fromDir, { withFileTypes: true })
+    .sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0));
+  for (const entry of entries) {
+    const srcPath = join(fromDir, entry.name);
+    const dstPath = join(toDir, entry.name);
+    if (entry.isDirectory()) {
+      carried += mirrorTree(srcPath, dstPath);
+    } else if (entry.isFile()) {
+      writeFileSync(dstPath, readFileSync(srcPath));
+      carried += 1;
+    }
+  }
+  return carried;
+}
 
-// The scorer's own caps (reference/gate.json): only text_max_bytes shapes the bytes; the others refuse an entry the
-// scorer would refuse (more than 4 screenshots or one over 256 KiB; more than 993 files in game/ or 48 MiB of game
-// files, in all, or a path under game/ over 1000 bytes: game/ counts beside /output's own 1000-entry cap, its
-// screenshots/ and dossier.json).
-writeFileSync(
-  join(out, 'dossier.json'),
-  buildDossier(out, {
-    text_max_bytes: 163840,
-    screenshots: { max: 4, max_bytes: 262144 },
-    game_max_files: 993,
-    game_max_bytes: 50331648,
-    game_path_max_bytes: 1000,
-  }),
-);
+function folderBytes(dir: string): number {
+  let total = 0;
+  for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    const p = join(dir, entry.name);
+    total += entry.isDirectory() ? folderBytes(p) : statSync(p).size;
+  }
+  return total;
+}
+
+// The platform's limits for this bounty, gathered in one place so the bundle
+// step and the dossier can never drift apart.
+const harborCaps = {
+  text_max_bytes: 163840,
+  screenshots: { max: 4, max_bytes: 262144 },
+  game_max_files: 993,
+  game_max_bytes: 50331648,
+  game_path_max_bytes: 1000,
+};
+
+function assembleBundle(): void {
+  const requested = process.env.MAKEFUN_OUTPUT_DIR;
+  const outDir = requested ? resolve(here, requested) : join(here, 'out');
+  if (!existsSync(join(here, 'game'))) throw new Error('game folder is missing');
+  if (!existsSync(join(here, 'screenshots'))) throw new Error('screenshots folder is missing');
+
+  const gameFiles = mirrorTree(join(here, 'game'), join(outDir, 'game'));
+  const shotFiles = mirrorTree(join(here, 'screenshots'), join(outDir, 'screenshots'));
+
+  const dossierBytes = kit.buildDossier(here, harborCaps);
+  writeFileSync(join(outDir, 'dossier.json'), dossierBytes);
+
+  const summary = {
+    gameFiles,
+    shotFiles,
+    gameBytes: folderBytes(join(here, 'game')),
+    dossierBytes: dossierBytes.byteLength,
+    outDir,
+  };
+  console.log('Vice Harbor bundle ready:', JSON.stringify(summary));
+}
+
+assembleBundle();

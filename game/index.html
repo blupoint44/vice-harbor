@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -6,81 +6,12 @@
 <title>Vice Harbor</title>
 <link rel="icon" href="data:,">
 <style>
-  html, body { margin: 0; padding: 0; overflow: hidden; background: #1a0f14; font-family: Arial, Helvetica, sans-serif; }
-  #app canvas { display: block; }
-  .hud { position: fixed; z-index: 5; color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,.8); pointer-events: none; }
-  #topLeft { top: 12px; left: 14px; }
-  #stars { font-size: 26px; color: #ffd23e; letter-spacing: 2px; min-height: 30px; }
-  #cash { font-size: 22px; font-weight: bold; color: #7dff9a; }
-  #healthWrap { width: 190px; height: 12px; background: rgba(0,0,0,.55); border: 1px solid rgba(255,255,255,.5); margin-top: 6px; }
-  #healthFill { height: 100%; width: 100%; background: #3aff7a; }
-  #bustWrap { width: 190px; height: 8px; background: rgba(0,0,0,.55); border: 1px solid rgba(255,120,120,.7); margin-top: 4px; display: none; }
-  #bustFill { height: 100%; width: 0%; background: #ff4040; }
-  #missionBox { top: 12px; left: 50%; transform: translateX(-50%); text-align: center; max-width: 70vw; }
-  #missionText { font-size: 17px; font-weight: bold; background: rgba(0,0,0,.45); padding: 6px 14px; border-radius: 6px; }
-  #timerText { font-size: 20px; font-weight: bold; color: #ffd23e; margin-top: 4px; }
-  #centerText { top: 34%; left: 50%; transform: translateX(-50%); font-size: 24px; font-weight: bold; text-align: center;
-    background: rgba(0,0,0,.5); padding: 10px 22px; border-radius: 8px; opacity: 0; transition: opacity .3s; max-width: 80vw; }
-  #bottomRight { bottom: 14px; right: 16px; text-align: right; }
-  #speedText { font-size: 24px; font-weight: bold; }
-  #hintText { font-size: 13px; opacity: .85; margin-top: 4px; }
-  #minimap { position: fixed; top: 12px; right: 14px; z-index: 5; border: 2px solid rgba(255,255,255,.55); border-radius: 6px; background: #10151f; }
-  .screen { position: fixed; inset: 0; z-index: 10; display: flex; flex-direction: column; align-items: center; justify-content: center;
-    background: radial-gradient(ellipse at 50% 70%, rgba(226,112,58,.35), rgba(10,6,16,.88)); color: #fff; text-align: center; }
-  .screen h1 { font-size: 64px; margin: 0 0 4px; letter-spacing: 3px; color: #ffb36b; text-shadow: 0 3px 0 #7a2d4a, 0 6px 24px rgba(0,0,0,.7); }
-  .screen h2 { font-size: 40px; margin: 0 0 10px; color: #ffb36b; }
-  .screen p { font-size: 16px; max-width: 560px; line-height: 1.5; opacity: .92; padding: 0 16px; }
-  .btn { pointer-events: auto; cursor: pointer; font-size: 20px; font-weight: bold; color: #1c1030; background: #ffd23e;
-    border: none; border-radius: 8px; padding: 12px 34px; margin-top: 14px; box-shadow: 0 4px 18px rgba(0,0,0,.5); }
-  .btn:hover { background: #ffe066; }
-  .btn.secondary { background: #e5e7eb; font-size: 16px; padding: 9px 22px; }
-  #pauseScreen, #endScreen { display: none; }
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #1a0f1e; }
+  #view { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
 </style>
 </head>
 <body>
-<div id="app"></div>
-
-<div class="hud" id="topLeft">
-  <div id="stars"></div>
-  <div id="cash">$0</div>
-  <div id="healthWrap"><div id="healthFill"></div></div>
-  <div id="bustWrap"><div id="bustFill"></div></div>
-</div>
-<div class="hud" id="missionBox">
-  <div id="missionText"></div>
-  <div id="timerText"></div>
-</div>
-<div class="hud" id="centerText"></div>
-<canvas id="minimap" width="180" height="180"></canvas>
-<div class="hud" id="bottomRight">
-  <div id="speedText"></div>
-  <div id="hintText"></div>
-</div>
-
-<div class="screen" id="titleScreen">
-  <h1>VICE HARBOR</h1>
-  <p>Golden hour in a coastal city of palm boulevards and neon. Run packages from the pier,
-     outrun the Harbor Patrol, and clear the Gate Rush to become Harbor King.</p>
-  <p><b>WASD</b> move / drive · <b>Mouse</b> camera (click to lock) · <b>Q/E</b> swing camera ·
-     <b>Shift</b> sprint · <b>F</b> enter / exit car · <b>Click</b> shoot · <b>Space</b> handbrake · <b>P</b> pause</p>
-  <button class="btn" id="startBtn">START ENGINE</button>
-</div>
-
-<div class="screen" id="pauseScreen">
-  <h2>PAUSED</h2>
-  <p>Vice Harbor waits for no one — but it will wait for you.</p>
-  <button class="btn" id="resumeBtn">RESUME</button>
-</div>
-
-<div class="screen" id="endScreen">
-  <h2 id="endTitle">BUSTED</h2>
-  <p id="endText"></p>
-  <button class="btn" id="restartBtn">PLAY AGAIN</button>
-  <button class="btn secondary" id="freeBtn" style="display:none">KEEP CRUISING</button>
-</div>
-
-<script src="vendor/three.min.js"></script>
-<script src="src/world.js"></script>
-<script src="src/game.js"></script>
+<canvas id="view" aria-label="Vice Harbor: explore the harbour city on foot or by car"></canvas>
+<script type="module" src="./src/game.js"></script>
 </body>
 </html>
