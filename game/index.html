@@ -3,114 +3,62 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Vice Harbor — an original open-world crime game</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%23f7a95c'/%3E%3Ccircle cx='8' cy='8' r='4' fill='%232456a8'/%3E%3C/svg%3E">
+<title>Vice Harbor</title>
+<link rel="icon" href="data:,">
 <style>
-  html, body { margin: 0; height: 100%; overflow: hidden; background: #1a1026; font-family: "Segoe UI", Arial, sans-serif; color: #fff; }
-  #view { position: fixed; inset: 0; }
-  #view canvas { display: block; }
-  .hidden { display: none !important; }
-
-  /* ---------- HUD ---------- */
-  #hud { position: fixed; inset: 0; pointer-events: none; z-index: 5; }
-  #topbar { position: absolute; top: 14px; right: 18px; text-align: right; }
-  #stars { font-size: 30px; letter-spacing: 4px; color: #ffd24d; text-shadow: 0 0 8px rgba(255,180,0,.8), 0 2px 3px #000; line-height: 1; }
-  #stars .off { color: rgba(255,255,255,.25); text-shadow: 0 2px 3px #000; }
-  #cash { font-size: 24px; font-weight: 700; color: #7dff9a; text-shadow: 0 2px 3px #000; margin-top: 4px; }
-  #healthwrap { margin-top: 7px; width: 190px; height: 13px; margin-left: auto; background: rgba(0,0,0,.55); border: 1px solid rgba(255,255,255,.5); }
-  #healthbar { height: 100%; width: 100%; background: linear-gradient(90deg, #e84545, #f2762e); transition: width .2s; }
-  #missionbox { position: absolute; top: 14px; left: 18px; max-width: 380px; background: rgba(10,10,24,.55); border-left: 4px solid #ff5da2; padding: 9px 13px; }
-  #missiontitle { font-size: 15px; font-weight: 700; color: #ffb3d1; letter-spacing: 1px; text-transform: uppercase; }
-  #objective { font-size: 16px; margin-top: 3px; text-shadow: 0 1px 2px #000; }
-  #timer { font-size: 20px; font-weight: 700; color: #ffd24d; margin-top: 2px; }
-  #mapwrap { position: absolute; right: 18px; bottom: 18px; text-align: center; }
-  #minimap { width: 184px; height: 184px; border-radius: 50%; border: 3px solid rgba(255,255,255,.75); background: #223; box-shadow: 0 4px 18px rgba(0,0,0,.6); }
-  #speed { font-size: 21px; font-weight: 700; text-shadow: 0 2px 3px #000; margin-top: 5px; }
-  #speed small { font-size: 12px; color: #ccc; }
-  #prompt { position: absolute; left: 50%; bottom: 120px; transform: translateX(-50%); font-size: 19px; background: rgba(10,10,24,.65); padding: 8px 18px; border-radius: 20px; border: 1px solid rgba(255,255,255,.35); white-space: nowrap; }
-  #toast { position: absolute; left: 50%; top: 22%; transform: translateX(-50%); font-size: 30px; font-weight: 800; letter-spacing: 1px; color: #fff; text-shadow: 0 0 14px rgba(255,93,162,.9), 0 3px 4px #000; text-align: center; white-space: nowrap; }
-  #subtoast { position: absolute; left: 50%; top: calc(22% + 44px); transform: translateX(-50%); font-size: 17px; color: #ffe9a8; text-shadow: 0 2px 3px #000; text-align: center; white-space: nowrap; }
-  #crosshair { position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%); font-size: 22px; color: rgba(255,255,255,.85); text-shadow: 0 0 4px #000; }
-  #damage { position: fixed; inset: 0; background: radial-gradient(ellipse at center, transparent 55%, rgba(200,0,0,.45) 100%); opacity: 0; pointer-events: none; z-index: 6; }
-
-  /* ---------- Screens ---------- */
-  .screen { position: fixed; inset: 0; z-index: 10; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
-  #title { background: linear-gradient(180deg, rgba(26,10,40,.25) 0%, rgba(26,10,40,.05) 45%, rgba(20,8,30,.72) 100%); }
-  #title h1 { font-size: 84px; margin: 0; letter-spacing: 3px; font-weight: 900; font-style: italic;
-    background: linear-gradient(180deg, #ffe9a8 15%, #ff9d5c 48%, #ff5da2 85%); -webkit-background-clip: text; background-clip: text; color: transparent;
-    filter: drop-shadow(0 4px 0 rgba(60,10,60,.55)) drop-shadow(0 0 26px rgba(255,120,80,.35)); }
-  #title h2 { font-size: 21px; font-weight: 400; letter-spacing: 6px; margin: 6px 0 30px; color: #cfeeff; text-shadow: 0 2px 6px #000; text-transform: uppercase; }
-  .btn { pointer-events: auto; cursor: pointer; min-width: 260px; margin: 6px; padding: 13px 30px; font-size: 20px; font-weight: 700; letter-spacing: 2px;
-    color: #fff; background: linear-gradient(90deg, rgba(255,93,162,.85), rgba(255,120,60,.85)); border: 2px solid rgba(255,255,255,.65); border-radius: 6px; text-transform: uppercase; }
-  .btn:hover { filter: brightness(1.2); }
-  .btn.secondary { background: rgba(16,20,40,.75); }
-  #controls { margin-top: 26px; font-size: 15px; line-height: 1.65; color: #e8ecff; text-shadow: 0 1px 3px #000; background: rgba(10,10,24,.5); padding: 12px 26px; border-radius: 8px; }
-  #controls b { color: #ffd24d; }
-  .panel { background: rgba(12,10,28,.88); padding: 34px 52px; border: 1px solid rgba(255,255,255,.3); border-radius: 10px; }
-  .panel h1 { font-size: 46px; margin: 0 0 10px; letter-spacing: 2px; }
-  .panel p { font-size: 18px; color: #dfe6ff; margin: 6px 0 20px; }
-  #pause, #end { background: rgba(10,6,20,.55); }
-  #story { max-width: 560px; font-size: 17px; line-height: 1.55; color: #ffe9f4; text-shadow: 0 2px 4px #000; margin: 0 20px 8px; }
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #1a1024; font-family: Arial, Helvetica, sans-serif; }
+  #game { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
+  #hud { position: fixed; inset: 0; pointer-events: none; color: #fff; }
+  #cash { position: absolute; top: 12px; left: 14px; font-size: 22px; font-weight: bold; text-shadow: 0 2px 4px #000; }
+  #stars { position: absolute; top: 10px; right: 16px; font-size: 26px; letter-spacing: 3px; text-shadow: 0 2px 4px #000; }
+  #mission { position: absolute; top: 46px; left: 14px; max-width: 430px; font-size: 14px; background: rgba(10,10,24,.55); padding: 6px 9px; border-radius: 6px; }
+  #msg { position: absolute; top: 18%; width: 100%; text-align: center; font-size: 30px; font-weight: bold; color: #ffd23e; text-shadow: 0 2px 6px #000; }
+  #speed { position: absolute; bottom: 18px; right: 20px; font-size: 24px; font-weight: bold; text-shadow: 0 2px 4px #000; }
+  #minimap { position: absolute; bottom: 14px; left: 14px; width: 160px; height: 160px; border: 2px solid rgba(255,255,255,.5); border-radius: 8px; }
+  #crosshair { position: absolute; left: 50%; top: 50%; width: 14px; height: 14px; margin: -7px 0 0 -7px; display: none; }
+  #crosshair:before, #crosshair:after { content: ''; position: absolute; background: #fff; box-shadow: 0 0 3px #000; }
+  #crosshair:before { left: 6px; top: 0; width: 2px; height: 14px; }
+  #crosshair:after { left: 0; top: 6px; width: 14px; height: 2px; }
+  #help { position: absolute; bottom: 14px; width: 100%; text-align: center; font-size: 12px; color: rgba(255,255,255,.75); text-shadow: 0 1px 3px #000; }
+  .screen { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; color: #fff; background: rgba(16,6,28,.45); z-index: 5; }
+  .screen h1 { font-size: 64px; margin: 0 0 6px; color: #ff5fa2; text-shadow: 0 0 24px #ff5fa2, 0 4px 8px #000; letter-spacing: 2px; }
+  .screen h2 { font-size: 40px; margin: 0 0 10px; color: #ffd23e; text-shadow: 0 3px 8px #000; }
+  .screen p { max-width: 560px; font-size: 16px; line-height: 1.45; text-shadow: 0 2px 4px #000; }
+  .screen button { pointer-events: auto; margin-top: 16px; font-size: 20px; font-weight: bold; padding: 12px 34px; border: 0; border-radius: 8px; background: #ff5fa2; color: #fff; cursor: pointer; box-shadow: 0 4px 14px rgba(0,0,0,.5); }
+  .screen button:hover { background: #ff7ab5; }
+  #pause, #end { display: none; }
 </style>
 </head>
 <body>
-<div id="view"></div>
-
-<div id="hud" class="hidden">
-  <div id="missionbox">
-    <div id="missiontitle">Free Roam</div>
-    <div id="objective">Explore Vice Harbor. Steal a car with F.</div>
-    <div id="timer"></div>
-  </div>
-  <div id="topbar">
-    <div id="stars"></div>
-    <div id="cash">$0</div>
-    <div id="healthwrap"><div id="healthbar"></div></div>
-  </div>
-  <div id="mapwrap">
-    <canvas id="minimap" width="184" height="184"></canvas>
-    <div id="speed">0 <small>KM/H</small></div>
-  </div>
-  <div id="prompt" class="hidden"></div>
-  <div id="toast" class="hidden"></div>
-  <div id="subtoast" class="hidden"></div>
-  <div id="crosshair" class="hidden">+</div>
+<canvas id="game" aria-label="Vice Harbor: open-world crime game in a coastal city"></canvas>
+<div id="hud">
+  <div id="cash">$0</div>
+  <div id="stars">☆☆☆☆☆</div>
+  <div id="mission"></div>
+  <div id="msg"></div>
+  <div id="speed"></div>
+  <canvas id="minimap" width="160" height="160"></canvas>
+  <div id="crosshair"></div>
+  <div id="help">WASD move · mouse drag / Q camera · Shift sprint · E enter/exit car · click shoot · Space handbrake · Esc/P pause</div>
 </div>
-<div id="damage"></div>
-
 <div id="title" class="screen">
   <h1>VICE HARBOR</h1>
-  <h2>One driver. One debt. One way out.</h2>
-  <p id="story">Nico Vale owes fixer Marlowe Reyes $2,500 — and Reyes always collects.
-    Run his jobs across the harbor, keep the Harbor Patrol off your tail, and buy your freedom.</p>
-  <button class="btn" id="btn-play">Play</button>
-  <button class="btn secondary hidden" id="btn-continue">Continue</button>
-  <button class="btn secondary" id="btn-how">How to play</button>
-  <div id="controls" class="hidden">
-    <b>WASD</b> move / drive &nbsp; <b>Mouse / Q E</b> camera &nbsp; <b>Shift</b> sprint<br>
-    <b>F</b> enter / exit car &nbsp; <b>Click</b> shoot on foot &nbsp; <b>Space</b> handbrake<br>
-    <b>Esc / P</b> pause &nbsp; — &nbsp; Crimes raise your wanted stars. Lose the police to cool off.
-  </div>
+  <p>Golden hour over a coastal city of towers, palms and neon. Run the docks, steal rides,
+     dodge the harbor patrol and finish the three-job story chain for Marisol Vega, the fixer of Pier 9.</p>
+  <p>WASD move · Shift sprint · E enter/exit car · click to shoot · Space handbrake · Esc pause</p>
+  <button id="startBtn">START ENGINE</button>
 </div>
-
-<div id="pause" class="screen hidden">
-  <div class="panel">
-    <h1>PAUSED</h1>
-    <p id="pausestats">Cash $0</p>
-    <button class="btn" id="btn-resume">Resume</button>
-    <button class="btn secondary" id="btn-restart">Restart story</button>
-  </div>
+<div id="pause" class="screen">
+  <h2>PAUSED</h2>
+  <p>Progress is saved automatically. Press Esc or P to keep driving.</p>
 </div>
-
-<div id="end" class="screen hidden">
-  <div class="panel">
-    <h1 id="endtitle">BUSTED</h1>
-    <p id="endtext">The Harbor Patrol got you.</p>
-    <button class="btn" id="btn-again">Back to the hideout</button>
-  </div>
+<div id="end" class="screen">
+  <h2 id="endTitle">BUSTED</h2>
+  <p id="endText"></p>
+  <button id="againBtn">RUN IT BACK</button>
 </div>
-
 <script src="./vendor/three.min.js"></script>
-<script type="module" src="./src/game.js"></script>
+<script src="./src/world.js"></script>
+<script src="./src/game.js"></script>
 </body>
 </html>
