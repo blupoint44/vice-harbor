@@ -4,69 +4,73 @@
 
 # Vice Harbor
 
-An original open-world crime game in a golden-hour coastal city — no third-party IP:
-the city, the names and the story are all its own. Explore on foot, take any car you
-can reach, work a short three-mission story for Rosa at Cafe Sol, and manage the
-attention of the harbour police while you do it.
+An original open-world crime game that runs in a desktop browser from static
+files — no build step, no network requests. You are Nico Vale, a wheelman who
+washed up in Vice Harbor with nothing but a hideout garage and a phone full of
+debts. Work three jobs for fixer Marlowe Reyes, outrun the Harbor Patrol, and
+turn a stolen coupe into a way out of the city.
 
-## Play it
+## What is in the game
+
+- **A golden-hour coastal city** — a procedural grid of towers with lit
+  windows, palm-lined boulevards, invented neon signs, an ocean shore with a
+  boardwalk and a pier, and your hideout garage.
+- **On foot and behind the wheel** — walk the streets, steal any parked or
+  moving car, and drive with an arcade model (acceleration, drift handbrake,
+  chase camera).
+- **Living traffic and pedestrians** — AI cars loop the road grid and brake
+  for obstacles; pedestrians stroll the sidewalks and flee from danger.
+- **Wanted system** — crimes raise your stars (0–5). Harbor Patrol units spawn
+  and pursue; at three stars and up they shoot back. Get busted or wasted and
+  you respawn at the hideout, fined.
+- **Combat** — a hitscan pistol on foot: muzzle flash, tracer, hit feedback.
+- **A chained 3-mission story** — a timed package delivery, an escape at two
+  stars, and a five-gate checkpoint run across the harbor, with cash payouts.
+- **HUD and minimap** — cash, health, wanted stars, mission objective and
+  timer, speedometer, and a live canvas minimap with blips for cars, police,
+  pedestrians and your objective.
+- **Screens and save** — title screen (Play / Continue / How to play), pause,
+  busted / wasted / story-complete end screens, and a localStorage save of
+  cash, mission progress and position.
+- **Synthesized sound** — engine hum, sirens, gunshots, pickup and mission
+  stings, all generated with WebAudio. No audio files.
+
+## Run it
 
 ```
 node serve.ts
 ```
 
-Then open http://localhost:8080 in desktop Chrome. Everything runs offline: the game
-is static files under `game/`, with three.js vendored alongside the source.
+Then open http://localhost:8080 in desktop Chrome.
+
+Deterministic screenshot scenes (used for the entry screenshots):
+`?shot=start`, `?shot=play`, `?shot=chase`, `?shot=mission`, each with
+`&seed=1`.
 
 ## Controls
 
 | Input | Action |
 | --- | --- |
-| WASD / arrows | Move on foot, drive in a car |
-| Mouse drag, Q / E | Orbit the camera |
-| Shift | Sprint on foot |
-| E | Steal / enter a car, get out again |
-| Mouse click | Fire the pistol (on foot) |
-| Space | Handbrake |
+| W A S D / arrows | Move / drive |
+| Mouse move, Q / E | Orbit camera on foot |
+| Shift | Sprint |
+| F | Enter / exit car |
+| Mouse click | Shoot (on foot) |
+| Space | Handbrake (in car) |
 | Esc / P | Pause |
-
-## What is in the harbour
-
-- A procedural sunset city: tower grid with lit windows, palm boulevards, ten
-  invented neon signs, an ocean, boardwalk and pier, and a hideout garage.
-- Traffic that drives the grid, parked cars waiting to be borrowed, and around
-  two dozen pedestrians who stroll — and flee when things get loud.
-- A 0–5 star wanted system: police spawn, pursue and, from three stars, return
-  fire. Get busted or wasted and you respawn at the hideout, minus a fine.
-- A chained three-mission story: a timed delivery, an escape at two stars, and a
-  five-gate checkpoint run, each with a timer and a cash payout.
-- HUD with cash, health, wanted stars, objective and speed, plus a live canvas
-  minimap with blips for you, the police and the current objective.
-- Title, pause and busted/wasted screens, and a localStorage save (cash and
-  mission progress) behind the Continue button.
-- Sound with no audio files: engine, siren, gunshots and UI stings are all
-  synthesised with WebAudio and start on the first user gesture.
-
-## Screenshot scenes
-
-Deterministic staging for captures, frozen from a fixed seed:
-
-```
-http://localhost:8080/?shot=start&seed=1
-http://localhost:8080/?shot=play&seed=1
-http://localhost:8080/?shot=chase&seed=1
-http://localhost:8080/?shot=mission&seed=1
-```
-
-Each scene sets `window.__shotReady` once it has rendered.
 
 ## Layout
 
-- `game/index.html` — page, HUD, menus and styling
-- `game/src/util.js` — seeded random source and shared maths
-- `game/src/audio.js` — the WebAudio synthesiser
-- `game/src/city.js` — the procedural city, ocean and hideout
-- `game/src/actors.js` — car and pedestrian factories, traffic and crowd brains
-- `game/src/game.js` — the loop: player, driving, police, combat, missions, HUD
-- `game/vendor/three.min.js` — vendored three.js
-- `main.ts` — copies `game/` and `screenshots/` out and writes `dossier.json`
+- `game/index.html` — page, HUD and screens markup
+- `game/src/util.js` — seeded RNG and small math helpers
+- `game/src/audio.js` — WebAudio synthesized sound effects
+- `game/src/city.js` — procedural city, ocean, palms, neon, roads
+- `game/src/actors.js` — traffic cars, pedestrians and police units
+- `game/src/game.js` — the game itself: player, driving, combat, wanted,
+  missions, HUD, minimap, save and screenshot scenes
+- `game/vendor/three.min.js` — vendored three.js (minified library build)
+- `main.ts` — hands the entry in: copies `game/` and `screenshots/` to the
+  output directory and writes `dossier.json`
+- `serve.ts` — tiny static server for local play
+
+MIT licensed — see `LICENSE`.

@@ -1,34 +1,29 @@
-// Vice Harbor — hand-in program for the gta6-01 bounty (Node 22, standard library
-// only). The playable game lives in game/ as plain static files: index.html, a handful
-// of classic scripts under game/src/, and three.js vendored at game/vendor/. Nothing
-// is built or fetched; this program simply copies game/ and screenshots/ into the
-// output directory and asks the vendored make.fun library to summarise them into
-// dossier.json, exactly as the scorer will.
-//
-// Run it the way the grader does, or locally with an output override:
-//   mkdir -p out && MAKEFUN_OUTPUT_DIR=out node main.ts
-// Play the game itself with:  node serve.ts   ->  http://localhost:8080
+// Vice Harbor — entrypoint for make.fun competition gta6-01.
+// Node 22, standard library only. Copies the static game in game/ and the
+// screenshots in screenshots/ into the output directory, then writes
+// dossier.json with the kit's vendored buildDossier (vendor/makefun-game.ts,
+// byte-identical to the kit copy — do not edit it).
+// Local check:  mkdir -p out && MAKEFUN_OUTPUT_DIR=out node main.ts
 
 import { cpSync, existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { buildDossier } from './vendor/makefun-game.ts';
 
-const entryDir = fileURLToPath(new URL('.', import.meta.url));
+const repoRoot = fileURLToPath(new URL('.', import.meta.url));
 const outputDir = process.env.MAKEFUN_OUTPUT_DIR ?? '/output';
 
-// Fresh output tree: the game folder wholesale, then the screenshots beside it.
 mkdirSync(outputDir, { recursive: true });
-cpSync(join(entryDir, 'game'), join(outputDir, 'game'), { recursive: true });
-mkdirSync(join(outputDir, 'screenshots'), { recursive: true });
-const shotsDir = join(entryDir, 'screenshots');
+cpSync(join(repoRoot, 'game'), join(outputDir, 'game'), { recursive: true });
+
+const shotsDir = join(repoRoot, 'screenshots');
 if (existsSync(shotsDir)) {
+  mkdirSync(join(outputDir, 'screenshots'), { recursive: true });
   cpSync(shotsDir, join(outputDir, 'screenshots'), { recursive: true });
 }
 
-// The caps below mirror the scorer's gate, so an entry the scorer would refuse
-// (too many or too-large screenshots, an oversized game tree, an over-long path)
-// fails here first, on my machine, instead of after submission.
+// Caps mirror the gate: dossier text capped at 160 KiB, at most 4
+// screenshots of 256 KiB, game/ at most 993 entries and 48 MiB.
 const dossier = buildDossier(outputDir, {
   text_max_bytes: 163840,
   screenshots: { max: 4, max_bytes: 262144 },
@@ -37,3 +32,12 @@ const dossier = buildDossier(outputDir, {
   game_path_max_bytes: 1000,
 });
 writeFileSync(join(outputDir, 'dossier.json'), dossier);
+
+// Report what was handed in, so a local run is easy to eyeball before
+// submitting: dossier size against the 1.5 MiB cap is the number that
+// matters most, then confirmation that both payloads were copied.
+const cap = 1.5 * 1024 * 1024;
+console.log('Vice Harbor dossier written to ' + outputDir);
+console.log('  dossier.json: ' + dossier.length + ' bytes (cap ' + cap + ')');
+console.log('  game/ copied: ' + existsSync(join(outputDir, 'game', 'index.html')));
+console.log('  screenshots/ copied: ' + existsSync(join(outputDir, 'screenshots')));
