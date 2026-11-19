@@ -4,47 +4,37 @@
 
 # Vice Harbor
 
-An original open-world crime game set in a golden-hour coastal city — no third-party IP,
-every name, sign and story beat invented for this entry. Built with three.js (vendored,
-fully offline) as plain static files under `game/`.
+An original open-world crime game set in a golden-hour coastal city, built with three.js.
+Cruise palm boulevards, steal cars, dodge the Harbor Patrol, and run a three-mission story
+chain from the pier to the Skyline Garage hideout.
 
-You are a runner for Marisol Vega, fixer of Pier 9. Cross a procedural city of lit towers,
-palm boulevards and neon signs; walk the boardwalk, steal cars, outrun the harbor patrol
-and finish a three-mission story chain: a timed delivery to the pier, an escape at two
-wanted stars, and a five-gate checkpoint run across the city.
+## Run it
 
-## Features
+```
+node serve.ts          # or: node main.ts with MAKEFUN_OUTPUT_DIR set for the dossier build
+```
 
-- Procedural coastal city: tower blocks with lit windows, invented neon signs, ocean,
-  boardwalk, pier and a hideout garage
-- On-foot movement with sprint and a mouse/Q/E orbit camera
-- Steal and drive cars; traffic AI circulates the road grid
-- Pedestrians who stroll the sidewalks and flee from gunfire and fast cars
-- Wanted system (0–5 stars) with police pursuit, flashing light bars and bust pressure
-- Hitscan pistol combat on foot
-- Three chained missions with timers, checkpoint gates, cash rewards
-- HUD with cash, wanted stars, mission tracker, speedometer and a live canvas minimap
-- Title, pause and end screens; progress saved in localStorage
-- WebAudio-synthesized engine, siren, gunshot and chime sounds (no audio files)
+Then open http://localhost:8080 — the game is fully offline, no network requests.
 
 ## Controls
 
 - **WASD** — move / drive
-- **Mouse drag or Q** — camera
+- **Mouse** (click canvas to lock) / **Q / E** — camera
 - **Shift** — sprint
-- **E** — enter / exit (steal) car
-- **Mouse click** — shoot (on foot)
+- **E** — enter / exit car (context: the interact key is **F** when a car is near; see HUD hint)
+- **Click** — shoot pistol (on foot, pointer locked)
 - **Space** — handbrake
 - **Esc / P** — pause
 
-## Run it
+## Features
 
-```sh
-node serve.ts          # serves game/ at http://localhost:8080
-```
-
-Deterministic screenshot scenes: `?shot=cover|drive|chase|mission&seed=1`.
-
-## License
-
-MIT — see `LICENSE`.
+- Procedural golden-hour city: lit-window towers, invented neon signs, palm boulevards,
+  ocean, boardwalk and a fishing pier
+- On-foot and driving play with traffic AI, pedestrians and parked cars to steal
+- Wanted-star system with Harbor Patrol pursuit, bust meter and escape decay
+- Hitscan pistol combat, cash briefcase pickups, vehicle damage and player health
+- Three-mission story chain: timed pier delivery, a two-star escape, and a five-gate
+  checkpoint run — with HUD, canvas minimap, title / pause / end screens
+- localStorage save (career cash, missions completed, best Gate Rush time)
+- WebAudio-synthesized engine, siren, gunshot and pickup sounds — no audio files
+- Deterministic screenshot scenes via `?shot=start|play|chase|mission&seed=1`
